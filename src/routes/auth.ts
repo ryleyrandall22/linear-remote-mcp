@@ -2,7 +2,8 @@ import { env } from "cloudflare:workers";
 import type { AuthRequest } from "@cloudflare/workers-oauth-provider";
 import { LinearClient } from "@linear/sdk";
 import { Hono } from "hono";
-import type { HonoEnv } from "../types";
+import type { HonoEnv } from "~/types";
+
 export const SCOPES = ["read", "issues:create", "comments:create"];
 
 function getUpstreamAuthorizeUrl(
@@ -41,6 +42,7 @@ async function exchangeCodeForAccessToken(params: {
       client_secret,
       redirect_uri,
       grant_type: "authorization_code",
+      prompt: "consent", // Prompt the user every time (eg they want to change accounts)
     }),
   });
 
@@ -87,7 +89,7 @@ export const authRoute = new Hono<HonoEnv>()
       return c.text("Invalid state", 400);
     }
 
-    const [token, error] = await exchangeCodeForAccessToken({
+    const [payload, error] = await exchangeCodeForAccessToken({
       code: c.req.query("code"),
       upstream_url: "https://api.linear.app/oauth/token",
       client_secret: env.LINEAR_CLIENT_SECRET,
@@ -97,12 +99,16 @@ export const authRoute = new Hono<HonoEnv>()
 
     if (error) return error;
 
-    const client = new LinearClient({ accessToken: token.access_token });
+    const client = new LinearClient({ accessToken: payload.access_token });
     const me = await client.viewer;
 
     const { redirectTo } = await c.env.OAUTH_PROVIDER.completeAuthorization({
       metadata: {},
-      props: { email: me.email, userId: me.id },
+      props: {
+        accessToken: payload.access_token,
+        email: me.email,
+        userId: me.id,
+      },
       request: oauthReqInfo,
       scope: oauthReqInfo.scope,
       userId: me.id,

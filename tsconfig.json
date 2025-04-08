@@ -33,6 +33,9 @@
     "strict": true,
 
     /* Skip type checking all .d.ts files. */
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "paths": {
+      "~/*": ["./src/*"]
+    }
   }
 }

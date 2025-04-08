@@ -10,4 +10,8 @@ export type HonoEnv = {
 export type MCPState = {};
 
 // biome-ignore lint/complexity/noBannedTypes: <explanation>
-export type MCPProps = {};
+export type MCPProps = {
+  email: string;
+  userId: string;
+  accessToken: string;
+};
