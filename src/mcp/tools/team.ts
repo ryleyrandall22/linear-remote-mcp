@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { type Tool, tool } from "~/mcp/utils";
+import { IdComparatorSchema, type Tool, tool } from "~/mcp/utils";
 
 const TeamSchema = z.object({
   id: z.string(),
@@ -22,8 +22,17 @@ export const TEAM_TOOLS: Tool[] = [
   tool({
     name: "list_teams",
     description: "List all teams",
-    execute: async (client) => {
-      const teams = await client.teams();
+    params: {
+      filter: z
+        .object({
+          id: IdComparatorSchema.optional().describe("Search by team ID"),
+        })
+        .optional()
+        .describe("Only use this if you need to filter the teams"),
+    },
+    execute: async (client, args) => {
+      const teams = await client.teams({ filter: args.filter });
+
       return {
         content: [
           {

@@ -7,8 +7,9 @@ import { LinearClient } from "@linear/sdk";
 import { ISSUE_TOOLS } from "./tools/issue";
 import { TEAM_TOOLS } from "./tools/team";
 import { USER_TOOLS } from "./tools/users";
+import { WORKFLOW_TOOLS } from "./tools/workflows";
 
-const TOOLS = [...USER_TOOLS, ...TEAM_TOOLS];
+const TOOLS = [...USER_TOOLS, ...TEAM_TOOLS, ...ISSUE_TOOLS, ...WORKFLOW_TOOLS];
 
 export class LinearMCP extends McpAgent<
   CloudflareEnv & { OAUTH_PROVIDER: OAuthHelpers },

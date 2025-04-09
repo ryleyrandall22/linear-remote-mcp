@@ -4,7 +4,13 @@ import { LinearClient } from "@linear/sdk";
 import { Hono } from "hono";
 import type { HonoEnv } from "~/types";
 
-export const SCOPES = ["read", "issues:create", "comments:create"];
+export const SCOPES = [
+  //
+  "read",
+  "write",
+  "issues:create",
+  "comments:create",
+];
 
 function getUpstreamAuthorizeUrl(
   params: {

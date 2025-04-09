@@ -1,5 +1,11 @@
 import { z } from "zod";
-import { type Tool, tool } from "~/mcp/utils";
+import {
+  DateComparatorSchema,
+  IdComparatorSchema,
+  StringComparatorSchema,
+  type Tool,
+  tool,
+} from "~/mcp/utils";
 
 const IssueSchema = z.object({
   id: z.string(),
@@ -13,23 +19,43 @@ const IssueSchema = z.object({
   description: z.string().nullish(),
   branchName: z.string().nullish(),
   url: z.string().nullish(),
-  _projectMilestone: z.object({ id: z.string() }).nullish(),
-  _creator: z.object({ id: z.string() }).nullish(),
-  _cycle: z.object({ id: z.string() }).nullish(),
-  _parent: z.object({ id: z.string() }).nullish(),
-  _state: z.object({ id: z.string() }).nullish(),
-  _team: z.object({ id: z.string() }),
-  _assignee: z.object({ id: z.string() }).nullish(),
+  _projectMilestone: z
+    .object({ id: z.string() })
+    .nullish()
+    .describe("The project milestone of the issue"),
+  _creator: z
+    .object({ id: z.string() })
+    .nullish()
+    .describe("The creator of the issue"),
+  _cycle: z
+    .object({ id: z.string() })
+    .nullish()
+    .describe("The cycle of the issue"),
+  _parent: z
+    .object({ id: z.string() })
+    .nullish()
+    .describe("The parent of the issue"),
+  _state: z
+    .object({ id: z.string() })
+    .nullish()
+    .describe("The workflowID of the issue"),
+  _team: z.object({ id: z.string() }).describe("The team of the issue"),
+  _assignee: z
+    .object({ id: z.string() })
+    .nullish()
+    .describe("The assignee of the issue"),
 });
 
 const IssueMutationSchema = IssueSchema.pick({
   title: true,
   description: true,
-  _assignee: true,
-  _cycle: true,
-  _parent: true,
-  _projectMilestone: true,
-  _team: true,
+}).extend({
+  teamId: z.string(),
+  assigneeId: z.string().optional(),
+  cycleId: z.string().optional(),
+  parentId: z.string().optional(),
+  projectMilestoneId: z.string().optional(),
+  stateId: z.string().optional(),
 });
 
 export const ISSUE_TOOLS: Tool[] = [
@@ -45,8 +71,27 @@ export const ISSUE_TOOLS: Tool[] = [
   tool({
     name: "list_issues",
     description: "List all issues",
-    execute: async (client) => {
-      const issues = await client.issues();
+    params: {
+      assignee: z
+        .object({ id: IdComparatorSchema })
+        .optional()
+        .describe("Search by assignee"),
+      state: z
+        .object({ id: IdComparatorSchema })
+        .optional()
+        .describe(
+          "Search by state ID, if needed, call a tool to get all the states first",
+        ),
+      dueDate: DateComparatorSchema.optional().describe("Search by due date"),
+    },
+    execute: async (client, args) => {
+      const issues = await client.issues({
+        filter: {
+          assignee: args.assignee,
+          state: args.state,
+          dueDate: args.dueDate,
+        },
+      });
       return {
         content: [
           {
@@ -81,11 +126,12 @@ export const ISSUE_TOOLS: Tool[] = [
       const issue = await client.createIssue({
         title: args.title,
         description: args.description,
-        assigneeId: args._assignee?.id,
-        cycleId: args._cycle?.id,
-        parentId: args._parent?.id,
-        projectMilestoneId: args._projectMilestone?.id,
-        teamId: args._team.id,
+        assigneeId: args.assigneeId,
+        cycleId: args.cycleId,
+        parentId: args.parentId,
+        projectMilestoneId: args.projectMilestoneId,
+        teamId: args.teamId,
+        stateId: args.stateId,
       });
       return {
         content: [
@@ -108,7 +154,7 @@ export const ISSUE_TOOLS: Tool[] = [
         content: [
           {
             type: "text",
-            text: JSON.stringify(IssueSchema.parse(issue.issue)),
+            text: JSON.stringify(issue.success),
           },
         ],
       };
