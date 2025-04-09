@@ -10,7 +10,7 @@ export { LinearMCP };
 export default {
   async fetch(request, env, ctx) {
     const handler = new OAuthProvider({
-      apiRoute: "/sse",
+      apiRoute: ["/sse", "/auth/logout"],
       // @ts-expect-error - Types are wrong
       apiHandler: LinearMCP.mount("/sse"),
       // @ts-expect-error - Types are wrong

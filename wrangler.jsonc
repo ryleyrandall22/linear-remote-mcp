@@ -25,7 +25,7 @@
   "kv_namespaces": [
     {
       "binding": "OAUTH_KV",
-      "id": "928bc18957894eb9904d9dfc7c72441f" // linear-mcp-kv
+      "id": "928bc18957894eb9904d9dfc7c72441f" // linear-remote-mcp-kv
     }
   ],
   "observability": {

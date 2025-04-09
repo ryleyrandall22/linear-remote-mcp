@@ -1,9 +1,11 @@
+import { env } from "cloudflare:workers";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { McpAgent } from "agents/mcp";
 import type { MCPProps, MCPState } from "~/types";
 
 import type { OAuthHelpers } from "@cloudflare/workers-oauth-provider";
 import { LinearClient } from "@linear/sdk";
+import { listUserGrants, revokeGrant } from "~/routes/auth-utils";
 import { ISSUE_TOOLS } from "./tools/issue";
 import { TEAM_TOOLS } from "./tools/team";
 import { USER_TOOLS } from "./tools/users";
@@ -55,7 +57,7 @@ export class LinearMCP extends McpAgent<
 
       try {
         // Find grants associated with the user
-        const grants = await this.env.OAUTH_PROVIDER.listUserGrants(userId);
+        const grants = await listUserGrants(userId);
 
         if (!grants.items || grants.items.length === 0) {
           return {
@@ -68,7 +70,7 @@ export class LinearMCP extends McpAgent<
         // Revoke each grant found for the user
         let revokedCount = 0;
         for (const grant of grants.items) {
-          await this.env.OAUTH_PROVIDER.revokeGrant(grant.id, userId);
+          await revokeGrant(grant.id, userId);
           revokedCount++;
         }
 
